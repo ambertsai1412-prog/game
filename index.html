@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Puffy Cotton | 軟萌小豬版</title>
+    <style>
+        :root { --p: #FFB7B2; --bg: #FFF9FB; --text: #8E7C77; }
+        body { margin: 0; background: var(--bg); font-family: 'PingFang TC', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; touch-action: none; color: var(--text); overflow: hidden; }
+        
+        .card { background: white; width: 340px; border-radius: 60px; padding: 30px; box-shadow: 0 30px 60px rgba(255,183,178,0.2); text-align: center; position: relative; border: 8px solid white; user-select: none; }
+        
+        /* 舞台與造型 */
+        .pet-stage { height: 220px; display: flex; justify-content: center; align-items: center; position: relative; margin: 15px 0; background: rgba(255,183,178,0.03); border-radius: 40px; cursor: pointer; }
+        .svg-pet { width: 180px; height: 180px; transition: transform 0.2s; pointer-events: none; }
+
+        /* 貼紙與臭臭 */
+        .acc-sticker { position: absolute; font-size: 45px; cursor: grab; touch-action: none; z-index: 10; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
+        .poop { position: absolute; font-size: 35px; bottom: 20px; right: 30px; animation: bounce 2s infinite ease-in-out; pointer-events: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+
+        @keyframes bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-10px) scale(1.1); } }
+
+        /* 三大指數 */
+        .stat-group { margin: 15px 0; text-align: left; }
+        .stat-row { margin-bottom: 8px; }
+        .label { font-size: 11px; font-weight: bold; display: flex; justify-content: space-between; margin-bottom: 2px; }
+        .bar-bg { background: #FEEEEE; height: 10px; border-radius: 10px; overflow: hidden; border: 1px solid #FADADA; }
+        .bar-fill { height: 100%; transition: 0.5s; width: 100%; }
+        .h-fill { background: linear-gradient(90deg, #FFB7B2, #FF9AA2); }
+        .m-fill { background: linear-gradient(90deg, #B2E2F2, #8BC6EC); }
+        .c-fill { background: linear-gradient(90deg, #E0F7FA, #80DEEA); }
+
+        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        button { border: none; padding: 14px; border-radius: 25px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; background: #FFF0F0; color: #FF9AA2; }
+        button:active { transform: scale(0.95); }
+        .btn-bath { grid-column: span 2; background: #E1F5FE; color: #0288D1; margin-top: 5px; }
+
+        #shop { display: none; position: absolute; inset: 0; background: white; border-radius: 60px; padding: 30px; z-index: 100; flex-direction: column; overflow-y: auto; }
+        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .item { background: #FFF9F9; border: 2px solid #FEE2E2; border-radius: 20px; padding: 12px; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .item:hover { transform: scale(1.05); border-color: var(--p); }
+
+        #overlay { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; }
+        input { padding: 15px; border: 3px solid #FEE2E2; border-radius: 25px; text-align: center; font-size: 18px; margin-bottom: 20px; outline: none; }
+        .pet-opt { width: 75px; height: 75px; background: white; padding: 10px; border-radius: 25px; cursor: pointer; margin: 5px; border: 2px solid transparent; transition: 0.3s; }
+        .pet-opt:hover { border-color: var(--p); transform: translateY(-5px); }
+
+        #speech { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: white; border: 2px solid #FFEDEF; padding: 6px 18px; border-radius: 20px; font-size: 14px; opacity: 0; transition: 0.3s; z-index: 60; white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body>
+
+<div id="overlay">
+    <h2 style="color:var(--p); font-size: 32px; margin-bottom: 10px;">Puffy Cotton</h2>
+    <input type="text" id="nameIn" placeholder="點擊命名我的寶貝..." maxlength="8">
+    <div id="petSelector" style="display:flex; flex-wrap:wrap; justify-content:center;"></div>
+</div>
+
+<div class="card">
+    <div id="speech">戳戳我～</div>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-weight:bold; color: #FFB347; font-size: 18px;">✨ <span id="coinVal">0</span></span>
+        <button onclick="toggleShop(true)" style="width:auto; padding:5px 15px; border-radius:15px; font-size:12px;">🏪 商店</button>
+    </div>
+    
+    <h2 id="nameTag" style="margin:10px 0 0; color: #8E7C77;">小雲朵</h2>
+    
+    <div class="pet-stage" id="stage" onclick="tapPet(event)">
+        <div id="petArt" class="svg-pet"></div>
+        <div id="poopIcon" class="poop" style="display:none;">💩</div>
+    </div>
+
+    <div class="stat-group">
+        <div class="stat-row">
+            <div class="label"><span>🍚 飽足感</span><span id="hText">100%</span></div>
+            <div class="bar-bg"><div id="hBar" class="bar-fill h-fill"></div></div>
+        </div>
+        <div class="stat-row">
+            <div class="label"><span>❤️ 幸福感</span><span id="mText">100%</span></div>
+            <div class="bar-bg"><div id="mBar" class="bar-fill m-fill"></div></div>
+        </div>
+        <div class="stat-row">
+            <div class="label"><span>🧼 乾淨度</span><span id="cText">100%</span></div>
+            <div class="bar-bg"><div id="cBar" class="bar-fill c-fill"></div></div>
+        </div>
+    </div>
+
+    <div class="btn-row">
+        <button onclick="feed()">餵罐罐 🐟</button>
+        <button onclick="play()">抱抱它 ❤️</button>
+        <button class="btn-bath" onclick="bath()">幫它洗香香 🛁</button>
+    </div>
+
+    <div id="shop">
+        <div style="display:flex; justify-content:space-between; align-items:center">
+            <h3 style="margin:0">萌配件商店</h3>
+            <button onclick="toggleShop(false)" style="background:none; color:#CCC; font-size:24px; cursor:pointer;">✕</button>
+        </div>
+        <p style="font-size:11px; color:#AAA; margin:10px 0;">配件可重複購買，購買後直接在寵物身上拖曳！</p>
+        <div class="shop-grid">
+            <div class="item" onclick="buy('🍓', 10)">🍓 草莓 (10)</div>
+            <div class="item" onclick="buy('🎀', 15)">🎀 蝴蝶結 (15)</div>
+            <div class="item" onclick="buy('🕶️', 25)">🕶️ 酷墨鏡 (25)</div>
+            <div class="item" onclick="buy('👑', 60)">👑 小皇冠 (60)</div>
+            <div class="item" onclick="buy('🌸', 5)">🌸 小萌花 (5)</div>
+            <div class="item" onclick="clearAllAcc()" style="background:#f0f0f0;">🛁 移除所有配件</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let coins = 0, hunger = 100, mood = 100, clean = 100, petType = 'pig';
+    const petColors = { 
+        cat: { body: '#FFD1DC', border: '#FFB6C1' },
+        rabbit: { body: '#C1E1FF', border: '#A4D3FF' },
+        pig: { body: '#FFC0CB', border: '#FF9999' },
+        bear: { body: '#FFE4C4', border: '#F5D0A9' }
+    };
+
+    function getPetSVG(type, emo = 'normal') {
+        let c = petColors[type];
+        let eyes = `<circle cx="38" cy="65" r="3.5" fill="#5D4037"/><circle cx="62" cy="65" r="3.5" fill="#5D4037"/>`;
+        if(emo === 'happy') eyes = `<path d="M34,65 Q38,61 42,65" stroke="#5D4037" fill="none" stroke-width="3" stroke-linecap="round"/><path d="M58,65 Q62,61 66,65" stroke="#5D4037" fill="none" stroke-width="3" stroke-linecap="round"/>`;
+        
+        let head = '';
+        if(type === 'cat') head = `<path d="M22,38 Q12,8 40,30" fill="${c.body}" stroke="${c.border}" stroke-width="1.5"/><path d="M78,38 Q88,8 60,30" fill="${c.body}" stroke="${c.border}" stroke-width="1.5"/>`;
+        if(type === 'rabbit') head = `<path d="M32,25 Q25,-15 42,25" fill="${c.body}" stroke="${c.border}" stroke-width="2"/><path d="M68,25 Q75,-15 58,25" fill="${c.body}" stroke="${c.border}" stroke-width="2"/>`;
+        if(type === 'pig') head = `
+            <circle cx="28" cy="38" r="10" fill="${c.body}" stroke="${c.border}" stroke-width="1.5"/>
+            <circle cx="72" cy="38" r="10" fill="${c.body}" stroke="${c.border}" stroke-width="1.5"/>
+            <ellipse cx="50" cy="74" rx="14" ry="9" fill="#FF9999" stroke="${c.border}" stroke-width="1.5"/>
+            <circle cx="45" cy="74" r="2.5" fill="white" opacity="0.8"/><circle cx="55" cy="74" r="2.5" fill="white" opacity="0.8"/>`;
+        if(type === 'bear') head = `<circle cx="28" cy="28" r="14" fill="${c.body}" stroke="${c.border}" stroke-width="2"/><circle cx="72" cy="28" r="14" fill="${c.body}" stroke="${c.border}" stroke-width="2"/>`;
+
+        return `
+        <svg viewBox="0 0 100 100">
+            <defs><radialGradient id="grad-${type}" cx="50%" cy="50%" r="50%"><stop offset="0%" style="stop-color:white"/><stop offset="100%" style="stop-color:${c.body}"/></radialGradient></defs>
+            ${head}
+            <circle cx="50" cy="65" r="45" fill="url(#grad-${type})" stroke="${c.border}" stroke-width="1.5" />
+            <circle cx="28" cy="76" r="10" fill="#FFB7B2" opacity="0.3"/><circle cx="72" cy="76" r="10" fill="#FFB7B2" opacity="0.3"/>
+            ${eyes}
+            <path d="M47,76 Q50,79 53,76" stroke="#5D4037" fill="none" stroke-width="2" stroke-linecap="round"/>
+        </svg>`;
+    }
+
+    document.getElementById('petSelector').innerHTML = Object.keys(petColors).map(t => `
+        <div class="pet-opt" onclick="startGame('${t}')">${getPetSVG(t)}</div>
+    `).join('');
+
+    function startGame(type) {
+        petType = type;
+        document.getElementById('nameTag').innerText = document.getElementById('nameIn').value || '小雲朵';
+        document.getElementById('overlay').style.display = 'none';
+        update();
+    }
+
+    function update(emo = 'normal') {
+        document.getElementById('petArt').innerHTML = getPetSVG(petType, emo);
+        document.getElementById('hBar').style.width = hunger + '%';
+        document.getElementById('hText').innerText = Math.floor(hunger) + '%';
+        document.getElementById('mBar').style.width = mood + '%';
+        document.getElementById('mText').innerText = Math.floor(mood) + '%';
+        document.getElementById('cBar').style.width = clean + '%';
+        document.getElementById('cText').innerText = Math.floor(clean) + '%';
+        document.getElementById('coinVal').innerText = coins;
+        document.getElementById('poopIcon').style.display = clean < 30 ? 'block' : 'none';
+    }
+
+    function tapPet(e) {
+        if(e.target.classList.contains('acc-sticker')) return;
+        let rand = Math.random();
+        if(rand < 0.5) {
+            showSpeech("嘻嘻～ ❤️");
+            mood = Math.min(100, mood + 2);
+        } else {
+            let gain = Math.floor(Math.random() * 5) + 1;
+            coins += gain;
+            showSpeech(`✨ +${gain} 鑽石！`);
+        }
+        update('happy');
+        setTimeout(() => update(), 800);
+    }
+
+    function feed() {
+        if(hunger >= 100) return showSpeech("吃飽飽了～ 🫧");
+        hunger = Math.min(100, hunger + 20);
+        showSpeech("好吃好吃！🐟");
+        update('happy');
+    }
+
+    function play() {
+        mood = Math.min(100, mood + 25);
+        showSpeech("最愛你了～ ❤️");
+        update('happy');
+    }
+
+    function bath() {
+        clean = 100;
+        showSpeech("洗香香了～ 🚿");
+        update('happy');
+    }
+
+    function toggleShop(s) { document.getElementById('shop').style.display = s ? 'flex' : 'none'; }
+
+    function buy(sym, price) {
+        if(coins >= price) {
+            coins -= price;
+            const sticker = document.createElement('div');
+            sticker.className = 'acc-sticker';
+            sticker.innerText = sym;
+            sticker.style.left = '140px';
+            sticker.style.top = '20px';
+            sticker.onmousedown = sticker.ontouchstart = dragStart;
+            document.getElementById('stage').appendChild(sticker);
+            showSpeech("好萌喔！拖動擺放吧 ✨");
+            toggleShop(false);
+            update();
+        } else { showSpeech("鑽石不夠唷！😭"); }
+    }
+
+    function clearAllAcc() {
+        const stickers = document.querySelectorAll('.acc-sticker');
+        stickers.forEach(s => s.remove());
+        toggleShop(false);
+    }
+
+    let activeS = null;
+    function dragStart(e) {
+        activeS = e.target;
+        e.stopPropagation();
+        document.addEventListener('mousemove', dragMove);
+        document.addEventListener('mouseup', dragEnd);
+        document.addEventListener('touchmove', dragMove);
+        document.addEventListener('touchend', dragEnd);
+    }
+
+    function dragMove(e) {
+        if (!activeS) return;
+        const stage = document.getElementById('stage').getBoundingClientRect();
+        let clientX = e.clientX || e.touches[0].clientX;
+        let clientY = e.clientY || e.touches[0].clientY;
+        let x = clientX - stage.left - 22;
+        let y = clientY - stage.top - 22;
+        activeS.style.left = Math.max(0, Math.min(x, stage.width - 45)) + 'px';
+        activeS.style.top = Math.max(0, Math.min(y, stage.height - 45)) + 'px';
+    }
+
+    function dragEnd() { activeS = null; }
+
+    function showSpeech(t) {
+        const s = document.getElementById('speech');
+        s.innerText = t; s.style.opacity = 1;
+        setTimeout(() => s.style.opacity = 0, 1500);
+    }
+
+    setInterval(() => {
+        hunger = Math.max(0, hunger - 1.2);
+        mood = Math.max(0, mood - 0.8);
+        clean = Math.max(0, clean - 1.5);
+        update();
+    }, 4500);
+</script>
+
+</body>
+</html>
