@@ -1,265 +1,2342 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Puffy Cotton | 軟萌小豬版</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧記帳 Pro+</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --p: #FFB7B2; --bg: #FFF9FB; --text: #8E7C77; }
-        body { margin: 0; background: var(--bg); font-family: 'PingFang TC', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; touch-action: none; color: var(--text); overflow: hidden; }
+        :root {
+            --primary-blue: #007AFF;
+            --primary-dark: #1C1C1E;
+            --success-green: #34C759;
+            --warning-orange: #FF9500;
+            --danger-red: #FF3B30;
+            --sidebar-bg: #2C2C2E;
+            --card-bg: #FFFFFF;
+            --bg-light: #F2F2F7;
+            --text-dark: #1C1C1E;
+            --text-light: #8E8E93;
+        }
         
-        .card { background: white; width: 340px; border-radius: 60px; padding: 30px; box-shadow: 0 30px 60px rgba(255,183,178,0.2); text-align: center; position: relative; border: 8px solid white; user-select: none; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         
-        /* 舞台與造型 */
-        .pet-stage { height: 220px; display: flex; justify-content: center; align-items: center; position: relative; margin: 15px 0; background: rgba(255,183,178,0.03); border-radius: 40px; cursor: pointer; }
-        .svg-pet { width: 180px; height: 180px; transition: transform 0.2s; pointer-events: none; }
-
-        /* 貼紙與臭臭 */
-        .acc-sticker { position: absolute; font-size: 45px; cursor: grab; touch-action: none; z-index: 10; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
-        .poop { position: absolute; font-size: 35px; bottom: 20px; right: 30px; animation: bounce 2s infinite ease-in-out; pointer-events: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
-
-        @keyframes bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-10px) scale(1.1); } }
-
-        /* 三大指數 */
-        .stat-group { margin: 15px 0; text-align: left; }
-        .stat-row { margin-bottom: 8px; }
-        .label { font-size: 11px; font-weight: bold; display: flex; justify-content: space-between; margin-bottom: 2px; }
-        .bar-bg { background: #FEEEEE; height: 10px; border-radius: 10px; overflow: hidden; border: 1px solid #FADADA; }
-        .bar-fill { height: 100%; transition: 0.5s; width: 100%; }
-        .h-fill { background: linear-gradient(90deg, #FFB7B2, #FF9AA2); }
-        .m-fill { background: linear-gradient(90deg, #B2E2F2, #8BC6EC); }
-        .c-fill { background: linear-gradient(90deg, #E0F7FA, #80DEEA); }
-
-        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        button { border: none; padding: 14px; border-radius: 25px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; background: #FFF0F0; color: #FF9AA2; }
-        button:active { transform: scale(0.95); }
-        .btn-bath { grid-column: span 2; background: #E1F5FE; color: #0288D1; margin-top: 5px; }
-
-        #shop { display: none; position: absolute; inset: 0; background: white; border-radius: 60px; padding: 30px; z-index: 100; flex-direction: column; overflow-y: auto; }
-        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .item { background: #FFF9F9; border: 2px solid #FEE2E2; border-radius: 20px; padding: 12px; cursor: pointer; font-size: 14px; transition: 0.2s; }
-        .item:hover { transform: scale(1.05); border-color: var(--p); }
-
-        #overlay { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; }
-        input { padding: 15px; border: 3px solid #FEE2E2; border-radius: 25px; text-align: center; font-size: 18px; margin-bottom: 20px; outline: none; }
-        .pet-opt { width: 75px; height: 75px; background: white; padding: 10px; border-radius: 25px; cursor: pointer; margin: 5px; border: 2px solid transparent; transition: 0.3s; }
-        .pet-opt:hover { border-color: var(--p); transform: translateY(-5px); }
-
-        #speech { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: white; border: 2px solid #FFEDEF; padding: 6px 18px; border-radius: 20px; font-size: 14px; opacity: 0; transition: 0.3s; z-index: 60; white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        body {
+            font-family: -apple-system, "Microsoft JhengHei", "Segoe UI", sans-serif;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+            padding-bottom: 50px; /* 為設計者署名留空間 */
+        }
+        
+        /* 側邊欄樣式 */
+        .menu-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            width: 40px;
+            height: 40px;
+            background: var(--primary-blue);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+            transition: transform 0.3s;
+        }
+        
+        .menu-toggle:hover {
+            transform: scale(1.05);
+        }
+        
+        .menu-toggle span {
+            width: 20px;
+            height: 2px;
+            background: white;
+            margin: 2px 0;
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100%;
+            background: var(--sidebar-bg);
+            color: white;
+            z-index: 1000;
+            padding: 80px 20px 20px;
+            transition: left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 5px 0 25px rgba(0,0,0,0.2);
+            overflow-y: auto;
+        }
+        
+        .sidebar.active {
+            left: 0;
+        }
+        
+        .sidebar-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .sidebar-header h2 {
+            color: white;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .sidebar-header p {
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 8px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateX(5px);
+        }
+        
+        .nav-item.active {
+            background: var(--primary-blue);
+        }
+        
+        .nav-item i {
+            margin-right: 12px;
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+        
+        .nav-label {
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+        
+        .nav-badge {
+            margin-left: auto;
+            background: var(--danger-red);
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+            backdrop-filter: blur(3px);
+        }
+        
+        /* 主要內容區域 */
+        .main-content {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            transition: all 0.4s;
+        }
+        
+        .view-section {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        
+        .view-section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 卡片樣式 */
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-title i {
+            margin-right: 8px;
+            color: var(--primary-blue);
+        }
+        
+        /* 輸入表單 */
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-dark);
+        }
+        
+        .form-input, .form-select {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #E5E5EA;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: white;
+            transition: border-color 0.3s;
+        }
+        
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 16px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        /* 按鈕樣式 */
+        .btn {
+            display: inline-block;
+            padding: 14px 24px;
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            background: #0056CC;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: var(--success-green);
+        }
+        
+        .btn-success:hover {
+            background: #2AA84A;
+        }
+        
+        .btn-danger {
+            background: var(--danger-red);
+        }
+        
+        .btn-danger:hover {
+            background: #D70015;
+        }
+        
+        .btn-warning {
+            background: var(--warning-orange);
+        }
+        
+        .btn-warning:hover {
+            background: #E68500;
+        }
+        
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            width: auto;
+        }
+        
+        /* 標籤樣式 */
+        .tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 15px 0;
+        }
+        
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            background: #F2F2F7;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .tag:hover {
+            background: #E5E5EA;
+            transform: scale(1.05);
+        }
+        
+        .tag.active {
+            background: var(--primary-blue);
+            color: white;
+        }
+        
+        .tag-remove {
+            margin-left: 8px;
+            color: #FF3B30;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        /* 交易紀錄項目 */
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            border-left: 4px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .transaction-item:hover {
+            background: #F9F9FB;
+            transform: translateX(5px);
+        }
+        
+        .transaction-item.income {
+            border-left-color: var(--success-green);
+        }
+        
+        .transaction-item.expense {
+            border-left-color: var(--danger-red);
+        }
+        
+        .transaction-info {
+            flex: 1;
+        }
+        
+        .transaction-category {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+        
+        .transaction-meta {
+            display: flex;
+            gap: 10px;
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+        
+        .transaction-amount {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        
+        .transaction-amount.positive {
+            color: var(--success-green);
+        }
+        
+        .transaction-amount.negative {
+            color: var(--danger-red);
+        }
+        
+        .transaction-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            background: transparent;
+            border: 1px solid #E5E5EA;
+            color: var(--text-light);
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+        
+        .action-btn:hover {
+            background: #F2F2F7;
+        }
+        
+        .action-btn.delete:hover {
+            background: var(--danger-red);
+            color: white;
+            border-color: var(--danger-red);
+        }
+        
+        /* 統計卡片 */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        
+        .stat-positive {
+            color: var(--success-green);
+        }
+        
+        .stat-negative {
+            color: var(--danger-red);
+        }
+        
+        /* 圖表容器 */
+        .chart-container {
+            position: relative;
+            height: 250px;
+            margin: 20px 0;
+        }
+        
+        /* 月/年導航器 */
+        .period-navigator {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        
+        .period-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+        
+        .period-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* 進度條 */
+        .progress-bar {
+            height: 8px;
+            background: #F2F2F7;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-blue);
+            border-radius: 4px;
+            transition: width 0.5s;
+        }
+        
+        /* 設計者署名 */
+        .designer-credit {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--text-light);
+            font-size: 0.9rem;
+            border-top: 1px solid #E5E5EA;
+            z-index: 100;
+        }
+        
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 250px;
+            }
+            
+            .main-content {
+                padding: 15px;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .period-navigator {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .transaction-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .transaction-actions {
+                align-self: flex-end;
+            }
+            
+            .designer-credit {
+                position: static;
+                margin-top: 20px;
+                border-top: 1px solid #E5E5EA;
+            }
+        }
+        
+        /* 動畫效果 */
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        /* 自定義滾動條 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #F2F2F7;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-blue);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0056CC;
+        }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-<div id="overlay">
-    <h2 style="color:var(--p); font-size: 32px; margin-bottom: 10px;">Puffy Cotton</h2>
-    <input type="text" id="nameIn" placeholder="點擊命名我的寶貝..." maxlength="8">
-    <div id="petSelector" style="display:flex; flex-wrap:wrap; justify-content:center;"></div>
+<!-- 側邊欄疊層 -->
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<!-- 漢堡選單按鈕 -->
+<div class="menu-toggle" onclick="toggleSidebar()">
+    <span></span>
+    <span></span>
+    <span></span>
 </div>
 
-<div class="card">
-    <div id="speech">戳戳我～</div>
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span style="font-weight:bold; color: #FFB347; font-size: 18px;">✨ <span id="coinVal">0</span></span>
-        <button onclick="toggleShop(true)" style="width:auto; padding:5px 15px; border-radius:15px; font-size:12px;">🏪 商店</button>
+<!-- 側邊導航欄 -->
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h2>智慧記帳 Pro+</h2>
+        <p id="current-date">載入中...</p>
     </div>
     
-    <h2 id="nameTag" style="margin:10px 0 0; color: #8E7C77;">小雲朵</h2>
+    <div class="nav-item active" onclick="switchView('dashboard')">
+        <i class="fas fa-home"></i>
+        <span class="nav-label">儀表板</span>
+    </div>
     
-    <div class="pet-stage" id="stage" onclick="tapPet(event)">
-        <div id="petArt" class="svg-pet"></div>
-        <div id="poopIcon" class="poop" style="display:none;">💩</div>
+    <div class="nav-item" onclick="switchView('ledger')">
+        <i class="fas fa-receipt"></i>
+        <span class="nav-label">記帳中心</span>
+        <span class="nav-badge" id="today-count">0</span>
     </div>
+    
+    <div class="nav-item" onclick="switchView('budget')">
+        <i class="fas fa-calculator"></i>
+        <span class="nav-label">預算精算</span>
+    </div>
+    
+    <div class="nav-item" onclick="switchView('reports')">
+        <i class="fas fa-chart-line"></i>
+        <span class="nav-label">財務報表</span>
+    </div>
+    
+    <div class="nav-item" onclick="switchView('categories')">
+        <i class="fas fa-tags"></i>
+        <span class="nav-label">類別管理</span>
+    </div>
+    
+    <div class="nav-item" onclick="switchView('settings')">
+        <i class="fas fa-cog"></i>
+        <span class="nav-label">系統設定</span>
+    </div>
+    
+    <div style="margin-top: auto; padding-top: 30px; border-top: 1px solid rgba(255,255,255,0.1);">
+        <div class="nav-item" onclick="exportData()" style="background: rgba(52, 199, 89, 0.1);">
+            <i class="fas fa-download" style="color: #34C759;"></i>
+            <span class="nav-label" style="color: #34C759;">匯出資料</span>
+        </div>
+        
+        <div class="nav-item" onclick="importData()" style="background: rgba(0, 122, 255, 0.1);">
+            <i class="fas fa-upload" style="color: #007AFF;"></i>
+            <span class="nav-label" style="color: #007AFF;">匯入資料</span>
+        </div>
+        
+        <div class="nav-item" onclick="clearDataConfirm()" style="background: rgba(255, 59, 48, 0.1); margin-top: 10px;">
+            <i class="fas fa-trash-alt" style="color: #FF3B30;"></i>
+            <span class="nav-label" style="color: #FF3B30;">清除資料</span>
+        </div>
+    </div>
+</nav>
 
-    <div class="stat-group">
-        <div class="stat-row">
-            <div class="label"><span>🍚 飽足感</span><span id="hText">100%</span></div>
-            <div class="bar-bg"><div id="hBar" class="bar-fill h-fill"></div></div>
+<!-- 主要內容區域 -->
+<main class="main-content">
+    <!-- 儀表板 -->
+    <section id="dashboard" class="view-section active">
+        <div class="period-navigator">
+            <h1 class="period-title" id="dashboard-title">本月財務總覽</h1>
+            <div class="period-buttons">
+                <button class="btn btn-small" onclick="changeDashboardPeriod('month')">本月</button>
+                <button class="btn btn-small" onclick="changeDashboardPeriod('year')">本年</button>
+            </div>
         </div>
-        <div class="stat-row">
-            <div class="label"><span>❤️ 幸福感</span><span id="mText">100%</span></div>
-            <div class="bar-bg"><div id="mBar" class="bar-fill m-fill"></div></div>
+        
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-label">本月收入</div>
+                <div class="stat-value stat-positive" id="month-income">$0</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="income-progress" style="width: 0%"></div>
+                </div>
+                <div class="stat-label">達成率 <span id="income-rate">0%</span></div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">本月支出</div>
+                <div class="stat-value stat-negative" id="month-expense">$0</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="expense-progress" style="width: 0%"></div>
+                </div>
+                <div class="stat-label">預算使用 <span id="expense-rate">0%</span></div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">本月結餘</div>
+                <div class="stat-value" id="month-balance">$0</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="balance-progress" style="width: 0%"></div>
+                </div>
+                <div class="stat-label">儲蓄率 <span id="saving-rate">0%</span></div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">平均每日支出</div>
+                <div class="stat-value" id="daily-average">$0</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="daily-progress" style="width: 0%"></div>
+                </div>
+                <div class="stat-label">今日已花 <span id="today-spent">$0</span></div>
+            </div>
         </div>
-        <div class="stat-row">
-            <div class="label"><span>🧼 乾淨度</span><span id="cText">100%</span></div>
-            <div class="bar-bg"><div id="cBar" class="bar-fill c-fill"></div></div>
+        
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-chart-pie"></i>
+                <span>支出分類分佈</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="dashboard-chart"></canvas>
+            </div>
         </div>
-    </div>
+        
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-history"></i>
+                <span>近期交易紀錄</span>
+            </div>
+            <div id="recent-transactions">
+                <!-- 動態載入近期交易 -->
+            </div>
+        </div>
+    </section>
+    
+    <!-- 記帳中心 -->
+    <section id="ledger" class="view-section">
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-plus-circle"></i>
+                <span>新增交易</span>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">日期</label>
+                    <input type="date" class="form-input" id="transaction-date" value="">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">類型</label>
+                    <select class="form-select" id="transaction-type" onchange="updateCategoryOptions()">
+                        <option value="expense">支出 (-)</option>
+                        <option value="income">收入 (+)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group" id="expense-type-container">
+                <label class="form-label">支出性質</label>
+                <div class="tag-container">
+                    <div class="tag active" id="type-flex" onclick="setExpenseType('flex')">變動支出</div>
+                    <div class="tag" id="type-fixed" onclick="setExpenseType('fixed')">固定支出</div>
+                    <div class="tag" id="type-invest" onclick="setExpenseType('invest')">投資支出</div>
+                    <div class="tag" id="type-save" onclick="setExpenseType('save')">儲蓄支出</div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">類別</label>
+                <select class="form-select" id="transaction-category"></select>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">金額</label>
+                    <input type="number" class="form-input" id="transaction-amount" placeholder="輸入金額" min="0" step="1">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">貨幣</label>
+                    <select class="form-select" id="transaction-currency">
+                        <option value="NTD">新台幣 (NTD)</option>
+                        <option value="USD">美元 (USD)</option>
+                        <option value="JPY">日圓 (JPY)</option>
+                        <option value="CNY">人民幣 (CNY)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">備註 (選填)</label>
+                <input type="text" class="form-input" id="transaction-note" placeholder="輸入交易說明...">
+            </div>
+            
+            <button class="btn btn-success" onclick="addTransaction()">
+                <i class="fas fa-save"></i> 儲存交易
+            </button>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-list-alt"></i>
+                <span>交易紀錄</span>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <input type="text" class="form-input" id="search-transactions" placeholder="搜尋描述或類別..." oninput="filterTransactions()">
+                </div>
+                
+                <div class="form-group">
+                    <select class="form-select" id="filter-category" onchange="filterTransactions()">
+                        <option value="">所有類別</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="transactions-list">
+                <!-- 動態載入交易紀錄 -->
+            </div>
+        </div>
+    </section>
+    
+    <!-- 預算精算 -->
+    <section id="budget" class="view-section">
+        <div class="period-navigator">
+            <h1 class="period-title" id="budget-month-title"></h1>
+            <div class="period-buttons">
+                <button class="btn btn-small" onclick="changeBudgetMonth(-1)">
+                    <i class="fas fa-chevron-left"></i> 上月
+                </button>
+                <button class="btn btn-small" onclick="changeBudgetMonth(1)">
+                    下月 <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-sliders-h"></i>
+                <span>預算設定</span>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">每月收入</label>
+                    <input type="number" class="form-input" id="budget-income" placeholder="0" oninput="updateBudget()">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">投資比例 (%)</label>
+                    <input type="number" class="form-input" id="budget-invest" placeholder="20" min="0" max="100" oninput="updateBudget()">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">儲蓄比例 (%)</label>
+                    <input type="number" class="form-input" id="budget-save" placeholder="30" min="0" max="100" oninput="updateBudget()">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">緊急預備金</label>
+                    <input type="number" class="form-input" id="budget-emergency" placeholder="5000" oninput="updateBudget()">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">固定支出預算</label>
+                    <input type="number" class="form-input" id="budget-fixed" placeholder="自動計算" oninput="updateBudget()">
+                    <small style="color: var(--text-light);">(實際: <span id="actual-fixed">$0</span>)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">變動支出預算</label>
+                    <input type="number" class="form-input" id="budget-flex" placeholder="自動計算" oninput="updateBudget()">
+                    <small style="color: var(--text-light);">(實際: <span id="actual-flex">$0</span>)</small>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">每日餐數</label>
+                    <select class="form-select" id="budget-meals" oninput="updateBudget()">
+                        <option value="1">1餐</option>
+                        <option value="2">2餐</option>
+                        <option value="3" selected>3餐</option>
+                        <option value="4">4餐</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">每日飲料預算</label>
+                    <input type="number" class="form-input" id="budget-drink" placeholder="50" oninput="updateBudget()">
+                </div>
+            </div>
+            
+            <button class="btn btn-success" onclick="calculateBudget()">
+                <i class="fas fa-calculator"></i> 計算每日餐費預算
+            </button>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-utensils"></i>
+                <span>餐費預算結果</span>
+            </div>
+            
+            <div style="text-align: center; padding: 30px 0;">
+                <h3 style="margin-bottom: 20px; color: var(--text-light);">每日可用餐費</h3>
+                <div class="stat-value stat-positive" id="daily-food-budget">$0</div>
+                <p style="margin-top: 10px; color: var(--text-light);">每餐約 <span id="per-meal-budget" style="font-weight: bold;">$0</span></p>
+                
+                <div style="margin-top: 30px; padding: 20px; background: rgba(52, 199, 89, 0.1); border-radius: 12px;">
+                    <p id="budget-message" style="margin: 0; color: var(--text-dark);"></p>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="budget-chart"></canvas>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 財務報表 -->
+    <section id="reports" class="view-section">
+        <div class="period-navigator">
+            <h1 class="period-title" id="report-year-title"></h1>
+            <div class="period-buttons">
+                <button class="btn btn-small" onclick="changeReportYear(-1)">
+                    <i class="fas fa-chevron-left"></i> 去年
+                </button>
+                <button class="btn btn-small" onclick="changeReportYear(1)">
+                    明年 <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-label">年收入總計</div>
+                <div class="stat-value stat-positive" id="year-income">$0</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">年支出總計</div>
+                <div class="stat-value stat-negative" id="year-expense">$0</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">年結餘</div>
+                <div class="stat-value" id="year-balance">$0</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">平均月支出</div>
+                <div class="stat-value" id="monthly-average">$0</div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-chart-bar"></i>
+                <span>年度支出趨勢</span>
+            </div>
+            <div class="chart-container" style="height: 300px;">
+                <canvas id="yearly-chart"></canvas>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-chart-pie"></i>
+                <span>年度分類比例</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="yearly-pie-chart"></canvas>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 類別管理 -->
+    <section id="categories" class="view-section">
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-tags"></i>
+                <span>支出類別管理</span>
+            </div>
+            
+            <div id="expense-categories-list" class="tag-container">
+                <!-- 動態載入支出類別 -->
+            </div>
+            
+            <div class="form-row" style="margin-top: 20px;">
+                <div class="form-group">
+                    <input type="text" class="form-input" id="new-expense-category" placeholder="新增支出類別...">
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-small" onclick="addCategory('expense')">新增類別</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-money-bill-wave"></i>
+                <span>收入類別管理</span>
+            </div>
+            
+            <div id="income-categories-list" class="tag-container">
+                <!-- 動態載入收入類別 -->
+            </div>
+            
+            <div class="form-row" style="margin-top: 20px;">
+                <div class="form-group">
+                    <input type="text" class="form-input" id="new-income-category" placeholder="新增收入類別...">
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-small" onclick="addCategory('income')">新增類別</button>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 系統設定 -->
+    <section id="settings" class="view-section">
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-user-cog"></i>
+                <span>個人設定</span>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">顯示貨幣</label>
+                <select class="form-select" id="setting-currency">
+                    <option value="NTD">新台幣 (NTD)</option>
+                    <option value="USD">美元 (USD)</option>
+                    <option value="JPY">日圓 (JPY)</option>
+                    <option value="CNY">人民幣 (CNY)</option>
+                    <option value="EUR">歐元 (EUR)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">每月起始日</label>
+                <select class="form-select" id="setting-month-start">
+                    <option value="1">1日</option>
+                    <option value="5">5日</option>
+                    <option value="10">10日</option>
+                    <option value="15">15日</option>
+                    <option value="20">20日</option>
+                    <option value="25">25日</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">每頁顯示交易數</label>
+                <select class="form-select" id="setting-page-size">
+                    <option value="10">10筆</option>
+                    <option value="20" selected>20筆</option>
+                    <option value="50">50筆</option>
+                    <option value="100">100筆</option>
+                </select>
+            </div>
+            
+            <button class="btn" onclick="saveSettings()">
+                <i class="fas fa-save"></i> 儲存設定
+            </button>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-database"></i>
+                <span>資料管理</span>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button class="btn btn-success" onclick="exportData()">
+                    <i class="fas fa-download"></i> 匯出所有資料 (JSON)
+                </button>
+                
+                <button class="btn" onclick="importData()">
+                    <i class="fas fa-upload"></i> 匯入資料
+                </button>
+                
+                <button class="btn btn-warning" onclick="backupData()">
+                    <i class="fas fa-file-export"></i> 建立備份
+                </button>
+                
+                <button class="btn btn-danger" onclick="clearDataConfirm()">
+                    <i class="fas fa-trash-alt"></i> 清除所有資料
+                </button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-info-circle"></i>
+                <span>系統資訊</span>
+            </div>
+            
+            <div style="line-height: 2;">
+                <p><strong>版本：</strong> 智慧記帳 Pro+ v2.0</p>
+                <p><strong>建立日期：</strong> <span id="app-created-date"></span></p>
+                <p><strong>交易紀錄數：</strong> <span id="total-transactions">0</span> 筆</p>
+                <p><strong>資料庫大小：</strong> <span id="data-size">0 KB</span></p>
+                <p><strong>最後備份：</strong> <span id="last-backup">從未備份</span></p>
+            </div>
+        </div>
+    </section>
+</main>
 
-    <div class="btn-row">
-        <button onclick="feed()">餵罐罐 🐟</button>
-        <button onclick="play()">抱抱它 ❤️</button>
-        <button class="btn-bath" onclick="bath()">幫它洗香香 🛁</button>
-    </div>
-
-    <div id="shop">
-        <div style="display:flex; justify-content:space-between; align-items:center">
-            <h3 style="margin:0">萌配件商店</h3>
-            <button onclick="toggleShop(false)" style="background:none; color:#CCC; font-size:24px; cursor:pointer;">✕</button>
-        </div>
-        <p style="font-size:11px; color:#AAA; margin:10px 0;">配件可重複購買，購買後直接在寵物身上拖曳！</p>
-        <div class="shop-grid">
-            <div class="item" onclick="buy('🍓', 10)">🍓 草莓 (10)</div>
-            <div class="item" onclick="buy('🎀', 15)">🎀 蝴蝶結 (15)</div>
-            <div class="item" onclick="buy('🕶️', 25)">🕶️ 酷墨鏡 (25)</div>
-            <div class="item" onclick="buy('👑', 60)">👑 小皇冠 (60)</div>
-            <div class="item" onclick="buy('🌸', 5)">🌸 小萌花 (5)</div>
-            <div class="item" onclick="clearAllAcc()" style="background:#f0f0f0;">🛁 移除所有配件</div>
-        </div>
-    </div>
+<!-- 設計者署名 -->
+<div class="designer-credit">
+    Designed by YI-LUN TSAI
 </div>
+
+<!-- 檔案上傳輸入 (隱藏) -->
+<input type="file" id="import-file-input" accept=".json" style="display: none;">
 
 <script>
-    let coins = 0, hunger = 100, mood = 100, clean = 100, petType = 'pig';
-    const petColors = { 
-        cat: { body: '#FFD1DC', border: '#FFB6C1' },
-        rabbit: { body: '#C1E1FF', border: '#A4D3FF' },
-        pig: { body: '#FFC0CB', border: '#FF9999' },
-        bear: { body: '#FFE4C4', border: '#F5D0A9' }
-    };
-
-    function getPetSVG(type, emo = 'normal') {
-        let c = petColors[type];
-        let eyes = `<circle cx="38" cy="65" r="3.5" fill="#5D4037"/><circle cx="62" cy="65" r="3.5" fill="#5D4037"/>`;
-        if(emo === 'happy') eyes = `<path d="M34,65 Q38,61 42,65" stroke="#5D4037" fill="none" stroke-width="3" stroke-linecap="round"/><path d="M58,65 Q62,61 66,65" stroke="#5D4037" fill="none" stroke-width="3" stroke-linecap="round"/>`;
-        
-        let head = '';
-        if(type === 'cat') head = `<path d="M22,38 Q12,8 40,30" fill="${c.body}" stroke="${c.border}" stroke-width="1.5"/><path d="M78,38 Q88,8 60,30" fill="${c.body}" stroke="${c.border}" stroke-width="1.5"/>`;
-        if(type === 'rabbit') head = `<path d="M32,25 Q25,-15 42,25" fill="${c.body}" stroke="${c.border}" stroke-width="2"/><path d="M68,25 Q75,-15 58,25" fill="${c.body}" stroke="${c.border}" stroke-width="2"/>`;
-        if(type === 'pig') head = `
-            <circle cx="28" cy="38" r="10" fill="${c.body}" stroke="${c.border}" stroke-width="1.5"/>
-            <circle cx="72" cy="38" r="10" fill="${c.body}" stroke="${c.border}" stroke-width="1.5"/>
-            <ellipse cx="50" cy="74" rx="14" ry="9" fill="#FF9999" stroke="${c.border}" stroke-width="1.5"/>
-            <circle cx="45" cy="74" r="2.5" fill="white" opacity="0.8"/><circle cx="55" cy="74" r="2.5" fill="white" opacity="0.8"/>`;
-        if(type === 'bear') head = `<circle cx="28" cy="28" r="14" fill="${c.body}" stroke="${c.border}" stroke-width="2"/><circle cx="72" cy="28" r="14" fill="${c.body}" stroke="${c.border}" stroke-width="2"/>`;
-
-        return `
-        <svg viewBox="0 0 100 100">
-            <defs><radialGradient id="grad-${type}" cx="50%" cy="50%" r="50%"><stop offset="0%" style="stop-color:white"/><stop offset="100%" style="stop-color:${c.body}"/></radialGradient></defs>
-            ${head}
-            <circle cx="50" cy="65" r="45" fill="url(#grad-${type})" stroke="${c.border}" stroke-width="1.5" />
-            <circle cx="28" cy="76" r="10" fill="#FFB7B2" opacity="0.3"/><circle cx="72" cy="76" r="10" fill="#FFB7B2" opacity="0.3"/>
-            ${eyes}
-            <path d="M47,76 Q50,79 53,76" stroke="#5D4037" fill="none" stroke-width="2" stroke-linecap="round"/>
-        </svg>`;
-    }
-
-    document.getElementById('petSelector').innerHTML = Object.keys(petColors).map(t => `
-        <div class="pet-opt" onclick="startGame('${t}')">${getPetSVG(t)}</div>
-    `).join('');
-
-    function startGame(type) {
-        petType = type;
-        document.getElementById('nameTag').innerText = document.getElementById('nameIn').value || '小雲朵';
-        document.getElementById('overlay').style.display = 'none';
-        update();
-    }
-
-    function update(emo = 'normal') {
-        document.getElementById('petArt').innerHTML = getPetSVG(petType, emo);
-        document.getElementById('hBar').style.width = hunger + '%';
-        document.getElementById('hText').innerText = Math.floor(hunger) + '%';
-        document.getElementById('mBar').style.width = mood + '%';
-        document.getElementById('mText').innerText = Math.floor(mood) + '%';
-        document.getElementById('cBar').style.width = clean + '%';
-        document.getElementById('cText').innerText = Math.floor(clean) + '%';
-        document.getElementById('coinVal').innerText = coins;
-        document.getElementById('poopIcon').style.display = clean < 30 ? 'block' : 'none';
-    }
-
-    function tapPet(e) {
-        if(e.target.classList.contains('acc-sticker')) return;
-        let rand = Math.random();
-        if(rand < 0.5) {
-            showSpeech("嘻嘻～ ❤️");
-            mood = Math.min(100, mood + 2);
-        } else {
-            let gain = Math.floor(Math.random() * 5) + 1;
-            coins += gain;
-            showSpeech(`✨ +${gain} 鑽石！`);
+    // ==================== 全域變數 ====================
+    let appData = {
+        transactions: [],
+        categories: {
+            expense: ['餐費', '交通', '購物', '娛樂', '房租', '水電', '通訊', '醫療', '教育', '投資', '儲蓄', '其他'],
+            income: ['薪水', '獎金', '投資收益', '兼職', '獎勵', '退款', '其他收入']
+        },
+        settings: {
+            currency: 'NTD',
+            monthStart: 1,
+            pageSize: 20,
+            budget: {
+                income: 50000,
+                investPercent: 20,
+                savePercent: 30,
+                emergency: 5000,
+                mealsPerDay: 3,
+                drinkPerDay: 50
+            }
+        },
+        stats: {
+            createdDate: new Date().toISOString(),
+            lastBackup: null,
+            version: '2.0'
         }
-        update('happy');
-        setTimeout(() => update(), 800);
+    };
+    
+    let currentView = 'dashboard';
+    let currentExpenseType = 'flex';
+    let dashboardPeriod = 'month';
+    let budgetMonth = new Date();
+    let reportYear = new Date().getFullYear();
+    
+    let charts = {
+        dashboard: null,
+        budget: null,
+        yearly: null,
+        yearlyPie: null
+    };
+    
+    // ==================== 初始化應用程式 ====================
+    function initApp() {
+        // 載入儲存的資料
+        loadData();
+        
+        // 設定今天日期
+        const today = new Date();
+        document.getElementById('transaction-date').value = today.toISOString().split('T')[0];
+        document.getElementById('current-date').textContent = formatDate(today, 'full');
+        
+        // 更新儀表板
+        updateDashboard();
+        
+        // 初始化類別選單
+        updateCategoryOptions();
+        renderCategoryTags();
+        
+        // 更新預算頁面
+        updateBudgetPage();
+        
+        // 更新報表頁面
+        updateReportPage();
+        
+        // 更新設定頁面
+        updateSettingsPage();
+        
+        // 顯示歡迎訊息
+        setTimeout(() => {
+            if (appData.transactions.length === 0) {
+                showNotification('歡迎使用智慧記帳 Pro+！開始記錄您的第一筆交易吧！', 'success');
+            }
+        }, 1000);
     }
-
-    function feed() {
-        if(hunger >= 100) return showSpeech("吃飽飽了～ 🫧");
-        hunger = Math.min(100, hunger + 20);
-        showSpeech("好吃好吃！🐟");
-        update('happy');
+    
+    // ==================== 資料管理 ====================
+    function loadData() {
+        const savedData = localStorage.getItem('financeProPlusData');
+        if (savedData) {
+            try {
+                const parsed = JSON.parse(savedData);
+                appData = { ...appData, ...parsed };
+                
+                // 確保必要的欄位存在
+                if (!appData.categories) appData.categories = { expense: [], income: [] };
+                if (!appData.settings) appData.settings = {};
+                if (!appData.stats) appData.stats = {};
+                
+                showNotification('資料載入成功！', 'success');
+            } catch (error) {
+                console.error('載入資料失敗:', error);
+                showNotification('載入資料失敗，使用預設設定', 'warning');
+            }
+        }
     }
-
-    function play() {
-        mood = Math.min(100, mood + 25);
-        showSpeech("最愛你了～ ❤️");
-        update('happy');
+    
+    function saveData() {
+        try {
+            localStorage.setItem('financeProPlusData', JSON.stringify(appData));
+            updateSystemInfo();
+            return true;
+        } catch (error) {
+            console.error('儲存資料失敗:', error);
+            showNotification('儲存資料失敗！', 'error');
+            return false;
+        }
     }
-
-    function bath() {
-        clean = 100;
-        showSpeech("洗香香了～ 🚿");
-        update('happy');
+    
+    function exportData() {
+        const dataStr = JSON.stringify(appData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `智慧記帳備份_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        URL.revokeObjectURL(url);
+        
+        // 更新最後備份時間
+        appData.stats.lastBackup = new Date().toISOString();
+        saveData();
+        
+        showNotification('資料匯出成功！', 'success');
     }
-
-    function toggleShop(s) { document.getElementById('shop').style.display = s ? 'flex' : 'none'; }
-
-    function buy(sym, price) {
-        if(coins >= price) {
-            coins -= price;
-            const sticker = document.createElement('div');
-            sticker.className = 'acc-sticker';
-            sticker.innerText = sym;
-            sticker.style.left = '140px';
-            sticker.style.top = '20px';
-            sticker.onmousedown = sticker.ontouchstart = dragStart;
-            document.getElementById('stage').appendChild(sticker);
-            showSpeech("好萌喔！拖動擺放吧 ✨");
-            toggleShop(false);
-            update();
-        } else { showSpeech("鑽石不夠唷！😭"); }
+    
+    function importData() {
+        document.getElementById('import-file-input').click();
     }
-
-    function clearAllAcc() {
-        const stickers = document.querySelectorAll('.acc-sticker');
-        stickers.forEach(s => s.remove());
-        toggleShop(false);
+    
+    function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const importedData = JSON.parse(e.target.result);
+                
+                // 確認資料格式
+                if (importedData.transactions && Array.isArray(importedData.transactions)) {
+                    if (confirm(`確定要匯入 ${importedData.transactions.length} 筆交易紀錄嗎？`)) {
+                        appData = importedData;
+                        saveData();
+                        initApp();
+                        showNotification('資料匯入成功！', 'success');
+                    }
+                } else {
+                    showNotification('匯入失敗：檔案格式不正確', 'error');
+                }
+            } catch (error) {
+                console.error('匯入錯誤:', error);
+                showNotification('匯入失敗：檔案無法讀取', 'error');
+            }
+            
+            // 重置檔案輸入
+            event.target.value = '';
+        };
+        
+        reader.readAsText(file);
     }
-
-    let activeS = null;
-    function dragStart(e) {
-        activeS = e.target;
-        e.stopPropagation();
-        document.addEventListener('mousemove', dragMove);
-        document.addEventListener('mouseup', dragEnd);
-        document.addEventListener('touchmove', dragMove);
-        document.addEventListener('touchend', dragEnd);
+    
+    function backupData() {
+        const backup = {
+            timestamp: new Date().toISOString(),
+            data: appData
+        };
+        
+        localStorage.setItem('financeProPlusBackup', JSON.stringify(backup));
+        appData.stats.lastBackup = new Date().toISOString();
+        saveData();
+        
+        showNotification('備份建立成功！', 'success');
+        updateSystemInfo();
     }
-
-    function dragMove(e) {
-        if (!activeS) return;
-        const stage = document.getElementById('stage').getBoundingClientRect();
-        let clientX = e.clientX || e.touches[0].clientX;
-        let clientY = e.clientY || e.touches[0].clientY;
-        let x = clientX - stage.left - 22;
-        let y = clientY - stage.top - 22;
-        activeS.style.left = Math.max(0, Math.min(x, stage.width - 45)) + 'px';
-        activeS.style.top = Math.max(0, Math.min(y, stage.height - 45)) + 'px';
+    
+    function restoreBackup() {
+        const backup = localStorage.getItem('financeProPlusBackup');
+        if (backup) {
+            if (confirm('確定要從備份還原資料嗎？')) {
+                try {
+                    const parsed = JSON.parse(backup);
+                    appData = parsed.data;
+                    saveData();
+                    initApp();
+                    showNotification('備份還原成功！', 'success');
+                } catch (error) {
+                    showNotification('還原失敗：備份檔案損毀', 'error');
+                }
+            }
+        } else {
+            showNotification('沒有找到備份檔案', 'warning');
+        }
     }
-
-    function dragEnd() { activeS = null; }
-
-    function showSpeech(t) {
-        const s = document.getElementById('speech');
-        s.innerText = t; s.style.opacity = 1;
-        setTimeout(() => s.style.opacity = 0, 1500);
+    
+    function clearDataConfirm() {
+        if (confirm('確定要清除所有資料嗎？此操作無法復原！')) {
+            clearAllData();
+        }
     }
-
-    setInterval(() => {
-        hunger = Math.max(0, hunger - 1.2);
-        mood = Math.max(0, mood - 0.8);
-        clean = Math.max(0, clean - 1.5);
-        update();
-    }, 4500);
+    
+    function clearAllData() {
+        localStorage.removeItem('financeProPlusData');
+        localStorage.removeItem('financeProPlusBackup');
+        appData = {
+            transactions: [],
+            categories: {
+                expense: ['餐費', '交通', '購物', '娛樂', '房租', '水電', '通訊', '醫療', '教育', '投資', '儲蓄', '其他'],
+                income: ['薪水', '獎金', '投資收益', '兼職', '獎勵', '退款', '其他收入']
+            },
+            settings: {
+                currency: 'NTD',
+                monthStart: 1,
+                pageSize: 20,
+                budget: {
+                    income: 50000,
+                    investPercent: 20,
+                    savePercent: 30,
+                    emergency: 5000,
+                    mealsPerDay: 3,
+                    drinkPerDay: 50
+                }
+            },
+            stats: {
+                createdDate: new Date().toISOString(),
+                lastBackup: null,
+                version: '2.0'
+            }
+        };
+        
+        initApp();
+        showNotification('所有資料已清除！', 'success');
+    }
+    
+    // ==================== 側邊欄與視圖控制 ====================
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        
+        sidebar.classList.toggle('active');
+        overlay.style.display = sidebar.classList.contains('active') ? 'block' : 'none';
+    }
+    
+    function switchView(viewId) {
+        // 更新活躍的導航項目
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        
+        // 隱藏所有視圖
+        document.querySelectorAll('.view-section').forEach(section => {
+            section.classList.remove('active');
+        });
+        
+        // 顯示目標視圖
+        document.getElementById(viewId).classList.add('active');
+        
+        // 設定活躍的導航項目
+        const navItem = document.querySelector(`.nav-item[onclick*="${viewId}"]`);
+        if (navItem) {
+            navItem.classList.add('active');
+        }
+        
+        // 更新目前視圖
+        currentView = viewId;
+        
+        // 視圖特定初始化
+        switch (viewId) {
+            case 'dashboard':
+                updateDashboard();
+                break;
+            case 'ledger':
+                updateTransactionList();
+                updateTodayCount();
+                break;
+            case 'budget':
+                updateBudgetPage();
+                break;
+            case 'reports':
+                updateReportPage();
+                break;
+            case 'categories':
+                renderCategoryTags();
+                break;
+            case 'settings':
+                updateSettingsPage();
+                break;
+        }
+        
+        // 關閉側邊欄
+        toggleSidebar();
+    }
+    
+    // ==================== 交易管理 ====================
+    function addTransaction() {
+        const amount = parseFloat(document.getElementById('transaction-amount').value);
+        const date = document.getElementById('transaction-date').value;
+        const type = document.getElementById('transaction-type').value;
+        const category = document.getElementById('transaction-category').value;
+        const note = document.getElementById('transaction-note').value;
+        const currency = document.getElementById('transaction-currency').value;
+        
+        // 驗證輸入
+        if (!amount || amount <= 0) {
+            showNotification('請輸入有效的金額！', 'error');
+            return;
+        }
+        
+        if (!date) {
+            showNotification('請選擇日期！', 'error');
+            return;
+        }
+        
+        if (!category) {
+            showNotification('請選擇類別！', 'error');
+            return;
+        }
+        
+        // 建立交易物件
+        const transaction = {
+            id: Date.now(),
+            date: date,
+            type: type,
+            category: category,
+            amount: amount,
+            currency: currency,
+            note: note || '',
+            timestamp: new Date().toISOString()
+        };
+        
+        // 如果是支出，添加支出類型
+        if (type === 'expense') {
+            transaction.expenseType = currentExpenseType;
+        }
+        
+        // 添加到陣列開頭
+        appData.transactions.unshift(transaction);
+        
+        // 儲存資料
+        saveData();
+        
+        // 重置表單
+        document.getElementById('transaction-amount').value = '';
+        document.getElementById('transaction-note').value = '';
+        
+        // 更新UI
+        if (currentView === 'ledger') {
+            updateTransactionList();
+        }
+        
+        // 更新儀表板
+        updateDashboard();
+        
+        // 顯示成功訊息
+        showNotification(`${type === 'income' ? '收入' : '支出'}記錄成功！`, 'success');
+        
+        // 更新今日交易計數
+        updateTodayCount();
+    }
+    
+    function updateTransactionList() {
+        const container = document.getElementById('transactions-list');
+        const searchTerm = document.getElementById('search-transactions').value.toLowerCase();
+        const filterCategory = document.getElementById('filter-category').value;
+        
+        // 篩選交易
+        let filteredTransactions = appData.transactions;
+        
+        if (searchTerm) {
+            filteredTransactions = filteredTransactions.filter(t => 
+                t.note.toLowerCase().includes(searchTerm) || 
+                t.category.toLowerCase().includes(searchTerm)
+            );
+        }
+        
+        if (filterCategory) {
+            filteredTransactions = filteredTransactions.filter(t => t.category === filterCategory);
+        }
+        
+        // 更新篩選選項
+        updateFilterOptions();
+        
+        if (filteredTransactions.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px 20px; color: var(--text-light);">
+                    <i class="fas fa-receipt" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i>
+                    <p>沒有找到交易紀錄</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // 產生HTML
+        container.innerHTML = filteredTransactions.slice(0, appData.settings.pageSize).map(transaction => `
+            <div class="transaction-item ${transaction.type}">
+                <div class="transaction-info">
+                    <div class="transaction-category">${transaction.category}</div>
+                    <div class="transaction-meta">
+                        <span>${formatDate(transaction.date, 'short')}</span>
+                        ${transaction.note ? `<span>${transaction.note}</span>` : ''}
+                        ${transaction.expenseType ? `<span>[${getExpenseTypeLabel(transaction.expenseType)}]</span>` : ''}
+                    </div>
+                </div>
+                <div class="transaction-amount ${transaction.type === 'income' ? 'positive' : 'negative'}">
+                    ${transaction.type === 'income' ? '+' : '-'}${formatCurrency(transaction.amount)}
+                </div>
+                <div class="transaction-actions">
+                    <button class="action-btn" onclick="editTransaction(${transaction.id})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn delete" onclick="deleteTransaction(${transaction.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    function deleteTransaction(id) {
+        if (confirm('確定要刪除這筆交易嗎？')) {
+            appData.transactions = appData.transactions.filter(t => t.id !== id);
+            saveData();
+            updateTransactionList();
+            updateDashboard();
+            showNotification('交易已刪除！', 'success');
+        }
+    }
+    
+    function editTransaction(id) {
+        const transaction = appData.transactions.find(t => t.id === id);
+        if (!transaction) return;
+        
+        // 填入表單
+        document.getElementById('transaction-date').value = transaction.date;
+        document.getElementById('transaction-type').value = transaction.type;
+        document.getElementById('transaction-category').value = transaction.category;
+        document.getElementById('transaction-amount').value = transaction.amount;
+        document.getElementById('transaction-note').value = transaction.note;
+        document.getElementById('transaction-currency').value = transaction.currency;
+        
+        if (transaction.type === 'expense' && transaction.expenseType) {
+            setExpenseType(transaction.expenseType);
+        }
+        
+        // 刪除舊的
+        deleteTransaction(id);
+        
+        // 滾動到頂部
+        window.scrollTo(0, 0);
+        
+        showNotification('交易已載入到表單中，請修改後儲存', 'info');
+    }
+    
+    function filterTransactions() {
+        updateTransactionList();
+    }
+    
+    function updateFilterOptions() {
+        const select = document.getElementById('filter-category');
+        const currentValue = select.value;
+        
+        // 取得所有類別
+        const categories = [...new Set(appData.transactions.map(t => t.category))].sort();
+        
+        // 更新選項
+        select.innerHTML = '<option value="">所有類別</option>' + 
+            categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+        
+        // 保持原選擇
+        select.value = currentValue;
+    }
+    
+    function updateTodayCount() {
+        const today = new Date().toISOString().split('T')[0];
+        const todayCount = appData.transactions.filter(t => t.date === today).length;
+        document.getElementById('today-count').textContent = todayCount;
+    }
+    
+    // ==================== 類別管理 ====================
+    function updateCategoryOptions() {
+        const type = document.getElementById('transaction-type').value;
+        const categories = appData.categories[type] || [];
+        const select = document.getElementById('transaction-category');
+        
+        select.innerHTML = categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+    }
+    
+    function renderCategoryTags() {
+        // 支出類別
+        const expenseContainer = document.getElementById('expense-categories-list');
+        expenseContainer.innerHTML = appData.categories.expense.map(category => `
+            <div class="tag">
+                ${category}
+                <span class="tag-remove" onclick="removeCategory('expense', '${category}')">×</span>
+            </div>
+        `).join('');
+        
+        // 收入類別
+        const incomeContainer = document.getElementById('income-categories-list');
+        incomeContainer.innerHTML = appData.categories.income.map(category => `
+            <div class="tag">
+                ${category}
+                <span class="tag-remove" onclick="removeCategory('income', '${category}')">×</span>
+            </div>
+        `).join('');
+    }
+    
+    function addCategory(type) {
+        const inputId = type === 'expense' ? 'new-expense-category' : 'new-income-category';
+        const input = document.getElementById(inputId);
+        const category = input.value.trim();
+        
+        if (!category) {
+            showNotification('請輸入類別名稱！', 'error');
+            return;
+        }
+        
+        if (appData.categories[type].includes(category)) {
+            showNotification('此類別已存在！', 'warning');
+            return;
+        }
+        
+        appData.categories[type].push(category);
+        input.value = '';
+        
+        saveData();
+        renderCategoryTags();
+        updateCategoryOptions();
+        
+        showNotification('類別新增成功！', 'success');
+    }
+    
+    function removeCategory(type, category) {
+        if (confirm(`確定要刪除「${category}」類別嗎？`)) {
+            // 檢查是否有交易使用此類別
+            const hasTransactions = appData.transactions.some(t => t.category === category);
+            
+            if (hasTransactions) {
+                if (!confirm('有交易使用此類別，刪除後這些交易將變為「未分類」。確定要刪除嗎？')) {
+                    return;
+                }
+                
+                // 更新交易類別
+                appData.transactions.forEach(t => {
+                    if (t.category === category) {
+                        t.category = type === 'expense' ? '其他' : '其他收入';
+                    }
+                });
+            }
+            
+            appData.categories[type] = appData.categories[type].filter(c => c !== category);
+            
+            saveData();
+            renderCategoryTags();
+            updateCategoryOptions();
+            updateTransactionList();
+            updateDashboard();
+            
+            showNotification('類別已刪除！', 'success');
+        }
+    }
+    
+    // ==================== 預算管理 ====================
+    function setExpenseType(type) {
+        currentExpenseType = type;
+        
+        // 更新按鈕狀態
+        document.querySelectorAll('#expense-type-container .tag').forEach(tag => {
+            tag.classList.remove('active');
+        });
+        
+        document.getElementById(`type-${type}`).classList.add('active');
+    }
+    
+    function updateBudgetPage() {
+        const year = budgetMonth.getFullYear();
+        const month = budgetMonth.getMonth() + 1;
+        const monthStr = `${year}年${month}月`;
+        
+        document.getElementById('budget-month-title').textContent = monthStr;
+        
+        // 載入預算設定
+        const budget = appData.settings.budget;
+        document.getElementById('budget-income').value = budget.income || 0;
+        document.getElementById('budget-invest').value = budget.investPercent || 0;
+        document.getElementById('budget-save').value = budget.savePercent || 0;
+        document.getElementById('budget-emergency').value = budget.emergency || 0;
+        document.getElementById('budget-meals').value = budget.mealsPerDay || 3;
+        document.getElementById('budget-drink').value = budget.drinkPerDay || 0;
+        
+        // 計算當月實際支出
+        const monthStart = `${year}-${month.toString().padStart(2, '0')}-01`;
+        const nextMonth = month === 12 ? new Date(year + 1, 0, 1) : new Date(year, month, 1);
+        const monthEnd = nextMonth.toISOString().split('T')[0];
+        
+        const monthTransactions = appData.transactions.filter(t => 
+            t.date >= monthStart && t.date < monthEnd && t.type === 'expense'
+        );
+        
+        const fixedExpenses = monthTransactions
+            .filter(t => t.expenseType === 'fixed')
+            .reduce((sum, t) => sum + t.amount, 0);
+            
+        const flexExpenses = monthTransactions
+            .filter(t => t.expenseType === 'flex')
+            .reduce((sum, t) => sum + t.amount, 0);
+        
+        document.getElementById('budget-fixed').value = fixedExpenses || 0;
+        document.getElementById('budget-flex').value = flexExpenses || 0;
+        document.getElementById('actual-fixed').textContent = formatCurrency(fixedExpenses);
+        document.getElementById('actual-flex').textContent = formatCurrency(flexExpenses);
+        
+        // 計算預算
+        calculateBudget();
+    }
+    
+    function changeBudgetMonth(offset) {
+        budgetMonth.setMonth(budgetMonth.getMonth() + offset);
+        updateBudgetPage();
+    }
+    
+    function calculateBudget() {
+        // 取得輸入值
+        const income = parseFloat(document.getElementById('budget-income').value) || 0;
+        const investPercent = parseFloat(document.getElementById('budget-invest').value) || 0;
+        const savePercent = parseFloat(document.getElementById('budget-save').value) || 0;
+        const emergency = parseFloat(document.getElementById('budget-emergency').value) || 0;
+        const fixedBudget = parseFloat(document.getElementById('budget-fixed').value) || 0;
+        const flexBudget = parseFloat(document.getElementById('budget-flex').value) || 0;
+        const mealsPerDay = parseInt(document.getElementById('budget-meals').value) || 3;
+        const drinkPerDay = parseFloat(document.getElementById('budget-drink').value) || 0;
+        
+        // 儲存設定
+        appData.settings.budget = {
+            income,
+            investPercent,
+            savePercent,
+            emergency,
+            mealsPerDay,
+            drinkPerDay
+        };
+        saveData();
+        
+        // 計算投資和儲蓄金額
+        const investAmount = income * (investPercent / 100);
+        const saveAmount = income * (savePercent / 100);
+        
+        // 計算可用於伙食的總金額
+        const totalExpenses = fixedBudget + flexBudget + investAmount + saveAmount + emergency;
+        const remainingForFood = income - totalExpenses;
+        
+        // 計算每日飲食預算 (假設30天)
+        const daysInMonth = 30;
+        const dailyDrinkCost = drinkPerDay;
+        const dailyFoodBudget = (remainingForFood / daysInMonth) - dailyDrinkCost;
+        
+        // 計算每餐預算
+        const perMealBudget = dailyFoodBudget / mealsPerDay;
+        
+        // 更新UI
+        document.getElementById('daily-food-budget').textContent = formatCurrency(Math.max(0, dailyFoodBudget));
+        document.getElementById('per-meal-budget').textContent = formatCurrency(Math.max(0, perMealBudget));
+        
+        // 顯示預算訊息
+        const budgetMessage = document.getElementById('budget-message');
+        if (remainingForFood > 0 && dailyFoodBudget > 0) {
+            budgetMessage.textContent = `每月有 ${formatCurrency(remainingForFood)} 可用於飲食，飲食預算充足。`;
+            budgetMessage.style.color = 'var(--success-green)';
+        } else if (dailyFoodBudget > 0 && perMealBudget <= 0) {
+            budgetMessage.textContent = '每日飲料花費已超過每日飲食預算，建議減少飲料支出。';
+            budgetMessage.style.color = 'var(--warning-orange)';
+        } else {
+            budgetMessage.textContent = '收入不足以支付所有費用，請調整您的設定。';
+            budgetMessage.style.color = 'var(--danger-red)';
+        }
+        
+        // 更新圖表
+        updateBudgetChart(income, fixedBudget, flexBudget, investAmount, saveAmount, emergency, Math.max(0, remainingForFood));
+    }
+    
+    function updateBudget() {
+        // 即時更新預算計算
+        calculateBudget();
+    }
+    
+    function updateBudgetChart(income, fixed, flex, invest, save, emergency, food) {
+        const ctx = document.getElementById('budget-chart').getContext('2d');
+        
+        if (charts.budget) {
+            charts.budget.destroy();
+        }
+        
+        charts.budget = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['固定支出', '變動支出', '投資', '儲蓄', '緊急預備金', '飲食預算'],
+                datasets: [{
+                    data: [fixed, flex, invest, save, emergency, food],
+                    backgroundColor: [
+                        '#FF3B30', // 固定支出 - 紅
+                        '#FF9500', // 變動支出 - 橙
+                        '#FFCC00', // 投資 - 黃
+                        '#34C759', // 儲蓄 - 綠
+                        '#AF52DE', // 緊急預備金 - 紫
+                        '#007AFF'  // 飲食預算 - 藍
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                cutout: '65%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${label}: ${formatCurrency(value)} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // ==================== 儀表板 ====================
+    function updateDashboard() {
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1;
+        
+        // 根據週期篩選交易
+        let periodTransactions = appData.transactions;
+        let periodLabel = '本月';
+        
+        if (dashboardPeriod === 'year') {
+            periodTransactions = appData.transactions.filter(t => {
+                const tYear = parseInt(t.date.split('-')[0]);
+                return tYear === currentYear;
+            });
+            periodLabel = '今年';
+        } else {
+            periodTransactions = appData.transactions.filter(t => {
+                const tYear = parseInt(t.date.split('-')[0]);
+                const tMonth = parseInt(t.date.split('-')[1]);
+                return tYear === currentYear && tMonth === currentMonth;
+            });
+        }
+        
+        // 計算統計數據
+        const income = periodTransactions
+            .filter(t => t.type === 'income')
+            .reduce((sum, t) => sum + t.amount, 0);
+            
+        const expense = periodTransactions
+            .filter(t => t.type === 'expense')
+            .reduce((sum, t) => sum + t.amount, 0);
+            
+        const balance = income - expense;
+        const savingRate = income > 0 ? Math.round((balance / income) * 100) : 0;
+        
+        // 計算平均每日支出
+        const today = new Date().toISOString().split('T')[0];
+        const daysInPeriod = dashboardPeriod === 'year' ? 365 : new Date(currentYear, currentMonth, 0).getDate();
+        const dailyAverage = expense / daysInPeriod;
+        
+        // 計算今日支出
+        const todayExpense = appData.transactions
+            .filter(t => t.date === today && t.type === 'expense')
+            .reduce((sum, t) => sum + t.amount, 0);
+        
+        // 更新統計卡片
+        document.getElementById('dashboard-title').textContent = `${periodLabel}財務總覽`;
+        document.getElementById('month-income').textContent = formatCurrency(income);
+        document.getElementById('month-expense').textContent = formatCurrency(expense);
+        document.getElementById('month-balance').textContent = formatCurrency(balance);
+        document.getElementById('daily-average').textContent = formatCurrency(dailyAverage);
+        document.getElementById('today-spent').textContent = formatCurrency(todayExpense);
+        document.getElementById('saving-rate').textContent = `${savingRate}%`;
+        
+        // 更新進度條
+        const incomeTarget = appData.settings.budget.income || 50000;
+        const expenseBudget = (appData.settings.budget.income || 50000) * 0.7; // 假設支出預算為收入的70%
+        
+        const incomeRate = incomeTarget > 0 ? Math.min(100, Math.round((income / incomeTarget) * 100)) : 0;
+        const expenseRate = expenseBudget > 0 ? Math.min(100, Math.round((expense / expenseBudget) * 100)) : 0;
+        const balanceRate = income > 0 ? Math.min(100, Math.max(0, Math.round((balance / income) * 100))) : 0;
+        
+        document.getElementById('income-progress').style.width = `${incomeRate}%`;
+        document.getElementById('expense-progress').style.width = `${expenseRate}%`;
+        document.getElementById('balance-progress').style.width = `${balanceRate}%`;
+        document.getElementById('daily-progress').style.width = `${Math.min(100, (todayExpense / dailyAverage) * 100)}%`;
+        
+        document.getElementById('income-rate').textContent = `${incomeRate}%`;
+        document.getElementById('expense-rate').textContent = `${expenseRate}%`;
+        
+        // 更新儀表板圖表
+        updateDashboardChart(periodTransactions);
+        
+        // 更新近期交易
+        updateRecentTransactions();
+        
+        // 更新系統資訊
+        updateSystemInfo();
+    }
+    
+    function changeDashboardPeriod(period) {
+        dashboardPeriod = period;
+        updateDashboard();
+    }
+    
+    function updateDashboardChart(transactions) {
+        // 計算支出分類分佈
+        const expenseTransactions = transactions.filter(t => t.type === 'expense');
+        const categoryTotals = {};
+        
+        expenseTransactions.forEach(t => {
+            categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.amount;
+        });
+        
+        // 排序並取前6個分類
+        const sortedCategories = Object.entries(categoryTotals)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 6);
+        
+        const labels = sortedCategories.map(item => item[0]);
+        const data = sortedCategories.map(item => item[1]);
+        
+        const ctx = document.getElementById('dashboard-chart').getContext('2d');
+        
+        if (charts.dashboard) {
+            charts.dashboard.destroy();
+        }
+        
+        charts.dashboard = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: [
+                        '#FF3B30', '#FF9500', '#FFCC00', 
+                        '#34C759', '#007AFF', '#5856D6',
+                        '#AF52DE', '#FF2D55'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function updateRecentTransactions() {
+        const container = document.getElementById('recent-transactions');
+        const recent = appData.transactions.slice(0, 5);
+        
+        if (recent.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 30px 20px; color: var(--text-light);">
+                    <i class="fas fa-receipt" style="font-size: 2.5rem; margin-bottom: 15px; opacity: 0.3;"></i>
+                    <p>還沒有交易紀錄</p>
+                    <p style="font-size: 0.9rem; margin-top: 10px;">點擊「記帳中心」開始記帳</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = recent.map(transaction => `
+            <div class="transaction-item ${transaction.type}" style="margin-bottom: 10px;">
+                <div class="transaction-info">
+                    <div class="transaction-category">${transaction.category}</div>
+                    <div class="transaction-meta">
+                        <span>${formatDate(transaction.date, 'short')}</span>
+                        ${transaction.note ? `<span>${transaction.note}</span>` : ''}
+                    </div>
+                </div>
+                <div class="transaction-amount ${transaction.type === 'income' ? 'positive' : 'negative'}">
+                    ${transaction.type === 'income' ? '+' : '-'}${formatCurrency(transaction.amount)}
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    // ==================== 財務報表 ====================
+    function updateReportPage() {
+        const year = reportYear;
+        document.getElementById('report-year-title').textContent = `${year}年財務報表`;
+        
+        // 篩選年度交易
+        const yearTransactions = appData.transactions.filter(t => {
+            const tYear = parseInt(t.date.split('-')[0]);
+            return tYear === year;
+        });
+        
+        // 計算年度統計
+        const yearIncome = yearTransactions
+            .filter(t => t.type === 'income')
+            .reduce((sum, t) => sum + t.amount, 0);
+            
+        const yearExpense = yearTransactions
+            .filter(t => t.type === 'expense')
+            .reduce((sum, t) => sum + t.amount, 0);
+            
+        const yearBalance = yearIncome - yearExpense;
+        const monthlyAverage = yearExpense / 12;
+        
+        // 更新統計卡片
+        document.getElementById('year-income').textContent = formatCurrency(yearIncome);
+        document.getElementById('year-expense').textContent = formatCurrency(yearExpense);
+        document.getElementById('year-balance').textContent = formatCurrency(yearBalance);
+        document.getElementById('monthly-average').textContent = formatCurrency(monthlyAverage);
+        
+        // 更新年度圖表
+        updateYearlyChart(yearTransactions, year);
+        updateYearlyPieChart(yearTransactions);
+    }
+    
+    function changeReportYear(offset) {
+        reportYear += offset;
+        updateReportPage();
+    }
+    
+    function updateYearlyChart(transactions, year) {
+        // 計算每月支出
+        const monthlyExpenses = new Array(12).fill(0);
+        
+        transactions.forEach(t => {
+            if (t.type === 'expense') {
+                const month = parseInt(t.date.split('-')[1]) - 1;
+                monthlyExpenses[month] += t.amount;
+            }
+        });
+        
+        const ctx = document.getElementById('yearly-chart').getContext('2d');
+        
+        if (charts.yearly) {
+            charts.yearly.destroy();
+        }
+        
+        charts.yearly = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+                datasets: [{
+                    label: '月支出',
+                    data: monthlyExpenses,
+                    backgroundColor: '#007AFF',
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `支出: ${formatCurrency(context.raw)}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return formatCurrency(value);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function updateYearlyPieChart(transactions) {
+        // 計算年度支出分類
+        const expenseTransactions = transactions.filter(t => t.type === 'expense');
+        const categoryTotals = {};
+        
+        expenseTransactions.forEach(t => {
+            categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.amount;
+        });
+        
+        // 排序並取前8個分類
+        const sortedCategories = Object.entries(categoryTotals)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 8);
+        
+        const labels = sortedCategories.map(item => item[0]);
+        const data = sortedCategories.map(item => item[1]);
+        
+        const ctx = document.getElementById('yearly-pie-chart').getContext('2d');
+        
+        if (charts.yearlyPie) {
+            charts.yearlyPie.destroy();
+        }
+        
+        charts.yearlyPie = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: [
+                        '#FF3B30', '#FF9500', '#FFCC00', '#34C759',
+                        '#007AFF', '#5856D6', '#AF52DE', '#FF2D55'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${label}: ${formatCurrency(value)} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // ==================== 系統設定 ====================
+    function updateSettingsPage() {
+        // 載入設定
+        document.getElementById('setting-currency').value = appData.settings.currency || 'NTD';
+        document.getElementById('setting-month-start').value = appData.settings.monthStart || 1;
+        document.getElementById('setting-page-size').value = appData.settings.pageSize || 20;
+        
+        // 更新系統資訊
+        updateSystemInfo();
+    }
+    
+    function saveSettings() {
+        appData.settings.currency = document.getElementById('setting-currency').value;
+        appData.settings.monthStart = parseInt(document.getElementById('setting-month-start').value);
+        appData.settings.pageSize = parseInt(document.getElementById('setting-page-size').value);
+        
+        saveData();
+        showNotification('設定已儲存！', 'success');
+    }
+    
+    function updateSystemInfo() {
+        // 更新交易數量
+        document.getElementById('total-transactions').textContent = appData.transactions.length;
+        
+        // 更新建立日期
+        const createdDate = new Date(appData.stats.createdDate);
+        document.getElementById('app-created-date').textContent = formatDate(createdDate, 'full');
+        
+        // 更新資料大小
+        const dataSize = JSON.stringify(appData).length;
+        document.getElementById('data-size').textContent = `${Math.round(dataSize / 1024)} KB`;
+        
+        // 更新最後備份時間
+        if (appData.stats.lastBackup) {
+            const lastBackup = new Date(appData.stats.lastBackup);
+            document.getElementById('last-backup').textContent = formatDate(lastBackup, 'full');
+        }
+    }
+    
+    // ==================== 工具函數 ====================
+    function formatDate(dateStr, format = 'short') {
+        const date = typeof dateStr === 'string' ? new Date(dateStr) : dateStr;
+        
+        if (format === 'short') {
+            return `${date.getMonth() + 1}/${date.getDate()}`;
+        } else if (format === 'full') {
+            return date.toLocaleDateString('zh-TW', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                weekday: 'long'
+            });
+        }
+        
+        return date.toLocaleDateString('zh-TW');
+    }
+    
+    function formatCurrency(amount) {
+        const currency = appData.settings.currency || 'NTD';
+        const symbols = {
+            'NTD': 'NT$',
+            'USD': '$',
+            'JPY': '¥',
+            'CNY': '¥',
+            'EUR': '€'
+        };
+        
+        const symbol = symbols[currency] || '';
+        return `${symbol}${Math.round(amount).toLocaleString()}`;
+    }
+    
+    function getExpenseTypeLabel(type) {
+        const labels = {
+            'flex': '變動',
+            'fixed': '固定',
+            'invest': '投資',
+            'save': '儲蓄'
+        };
+        return labels[type] || type;
+    }
+    
+    function showNotification(message, type = 'info') {
+        // 建立通知元素
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#34C759' : type === 'error' ? '#FF3B30' : type === 'warning' ? '#FF9500' : '#007AFF'};
+            color: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            z-index: 9999;
+            max-width: 300px;
+            animation: slideIn 0.3s;
+        `;
+        
+        notification.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // 3秒後移除通知
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s';
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 3000);
+        
+        // 添加動畫樣式
+        if (!document.getElementById('notification-styles')) {
+            const style = document.createElement('style');
+            style.id = 'notification-styles';
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+    
+    // ==================== 事件監聽器 ====================
+    document.addEventListener('DOMContentLoaded', function() {
+        // 初始化應用程式
+        initApp();
+        
+        // 設定檔案上傳事件
+        document.getElementById('import-file-input').addEventListener('change', handleFileUpload);
+        
+        // 設定支出類型按鈕
+        setExpenseType('flex');
+        
+        // 監聽表單輸入事件
+        document.getElementById('search-transactions').addEventListener('input', filterTransactions);
+        document.getElementById('filter-category').addEventListener('change', filterTransactions);
+        
+        // 監聽預算輸入事件
+        const budgetInputs = ['budget-income', 'budget-invest', 'budget-save', 'budget-emergency', 
+                             'budget-fixed', 'budget-flex', 'budget-meals', 'budget-drink'];
+        budgetInputs.forEach(id => {
+            document.getElementById(id).addEventListener('input', updateBudget);
+        });
+    });
+    
+    // 在頁面卸載前儲存資料
+    window.addEventListener('beforeunload', function() {
+        saveData();
+    });
 </script>
-
 </body>
 </html>
