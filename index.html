@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>平板小畫家 AI - 觸控優化版</title>
+    <style>
+        :root { --primary-pink: #ffafcc; --bg-cream: #fffdfa; }
+        body { 
+            font-family: 'PingFang TC', sans-serif; 
+            background-color: var(--bg-cream); 
+            margin: 0; padding: 10px; 
+            display: flex; flex-direction: column; align-items: center;
+            overflow: hidden; /* 防止平板滑動 */
+        }
+        
+        /* 畫布區域：針對平板調整大小 */
+        #canvas-stage { 
+            position: relative; 
+            width: 90vw; height: 55vh; 
+            border: 6px solid var(--primary-pink); 
+            border-radius: 20px; background: white; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            overflow: hidden; 
+        }
+        canvas { position: absolute; top: 0; left: 0; touch-action: none; width: 100%; height: 100%; }
+        
+        /* 貼紙層 */
+        #sticker-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; }
+        .draggable-sticker { 
+            position: absolute; font-size: 60px; 
+            cursor: move; pointer-events: auto; user-select: none;
+            display: inline-block; padding: 10px;
+        }
+        
+        /* 貼紙控制按鈕 (刪除) */
+        .delete-btn {
+            position: absolute; top: -10px; right: -10px;
+            background: #ff4757; color: white; border-radius: 50%;
+            width: 24px; height: 24px; line-height: 24px; text-align: center;
+            font-size: 14px; display: none; font-weight: bold;
+        }
+        .draggable-sticker.active .delete-btn { display: block; }
+
+        /* 控制面板：平板友好的大按鈕 */
+        .panel { 
+            background: white; padding: 15px; border-radius: 20px; 
+            width: 90vw; margin-top: 10px; 
+            display: flex; flex-direction: column; gap: 10px; 
+        }
+        .row { display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; }
+        
+        input[type="text"] { padding: 12px; border: 2px solid #ddd; border-radius: 12px; flex-grow: 1; font-size: 16px; }
+        button { padding: 12px 18px; border-radius: 12px; border: none; font-weight: bold; font-size: 16px; background: #f1f3f5; }
+        .btn-generate { background: var(--primary-pink); color: white; }
+        
+        /* 縮放滑桿 */
+        #size-slider { width: 100px; display: none; margin-left: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="row" style="margin-bottom: 5px;">
+        <button onclick="connectBT('Pen')">🔗 連結筆</button>
+        <button onclick="connectBT('Printer')">🖨️ 連結印表機</button>
+    </div>
+
+    <div id="canvas-stage">
+        <canvas id="bgCanvas"></canvas>
+        <canvas id="drawCanvas"></canvas>
+        <div id="sticker-layer"></div>
+    </div>
+
+    <div class="panel">
+        <div class="row">
+            <input type="text" id="aiInput" placeholder="想要畫什麼？">
+            <button onclick="startVoice()" style="background:#bde0fe">🎤 錄音</button>
+            <button class="btn-generate" onclick="generateRealAIArt()">✨ 生成圖案</button>
+        </div>
+
+        <div class="row">
+            <input type="color" id="colorPicker" value="#ff85a1" style="width:45px; height:45px;" onchange="setTool('draw', this.value)">
+            <button id="eraserBtn" onclick="setTool('erase')">🧽 橡皮擦</button>
+            <button onclick="clearColorLayer()">🧹 清除上色</button>
+            <span id="slider-label" style="display:none; font-size: 14px; color: var(--primary-pink);">大小：</span>
+            <input type="range" id="size-slider" min="0.5" max="3" step="0.1" value="1">
+        </div>
+
+        <div class="row">
+            <span onclick="addSticker('🌟')" style="font-size:35px;">🌟</span>
+            <span onclick="addSticker('🌈')" style="font-size:35px;">🌈</span>
+            <span onclick="addSticker('🐶')" style="font-size:35px;">🐶</span>
+            <span onclick="addSticker('🍦')" style="font-size:35px;">🍦</span>
+            <button onclick="printCanvas()" style="background:#2f3542; color:white; margin-left:15px;">🖨️ 印出來</button>
+        </div>
+    </div>
+
+<script>
+    const HF_API_KEY = "請在此填入您的API_KEY"; 
+    const bgCanvas = document.getElementById('bgCanvas');
+    const drawCanvas = document.getElementById('drawCanvas');
+    const bgCtx = bgCanvas.getContext('2d');
+    const drawCtx = drawCanvas.getContext('2d');
+    const sizeSlider = document.getElementById('size-slider');
+    let currentActiveSticker = null;
+
+    // 設定畫布解析度（解決平板模糊問題）
+    function resizeCanvas() {
+        const stage = document.getElementById('canvas-stage');
+        bgCanvas.width = drawCanvas.width = stage.clientWidth;
+        bgCanvas.height = drawCanvas.height = stage.clientHeight;
+        drawCtx.lineCap = 'round';
+        drawCtx.lineWidth = 12;
+    }
+    window.onload = resizeCanvas;
+
+    // --- 繪圖邏輯 (支援觸控) ---
+    let isDrawing = false;
+    let currentColor = '#ff85a1';
+
+    function setTool(mode, color) {
+        drawCtx.globalCompositeOperation = (mode === 'erase') ? 'destination-out' : 'source-over';
+        if(color) currentColor = color;
+        document.getElementById('eraserBtn').style.background = (mode === 'erase') ? '#ffc2d1' : '#f1f3f5';
+    }
+
+    const startDraw = (e) => {
+        isDrawing = true;
+        const pos = getPos(e);
+        drawCtx.beginPath();
+        drawCtx.moveTo(pos.x, pos.y);
+    };
+
+    const drawing = (e) => {
+        if (!isDrawing) return;
+        const pos = getPos(e);
+        drawCtx.strokeStyle = currentColor;
+        drawCtx.lineTo(pos.x, pos.y);
+        drawCtx.stroke();
+    };
+
+    function getPos(e) {
+        const rect = drawCanvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: clientX - rect.left, y: clientY - rect.top };
+    }
+
+    drawCanvas.addEventListener('touchstart', startDraw);
+    drawCanvas.addEventListener('touchmove', drawing);
+    window.addEventListener('touchend', () => isDrawing = false);
+
+    // --- 貼紙進階功能 (平板優化) ---
+    function addSticker(emoji) {
+        const container = document.createElement('div');
+        container.className = 'draggable-sticker';
+        container.innerHTML = `<span>${emoji}</span><div class="delete-btn">✕</div>`;
+        container.style.left = '100px'; container.style.top = '100px';
+        container.style.transform = 'scale(1)';
+
+        // 點擊貼紙：啟動控制 (顯示刪除鈕與滑桿)
+        container.onclick = (e) => {
+            e.stopPropagation();
+            if(currentActiveSticker) currentActiveSticker.classList.remove('active');
+            currentActiveSticker = container;
+            container.classList.add('active');
+            
+            // 顯示滑桿
+            sizeSlider.style.display = 'inline-block';
+            document.getElementById('slider-label').style.display = 'inline-block';
+            const currentScale = container.style.transform.replace('scale(', '').replace(')', '');
+            sizeSlider.value = currentScale;
+        };
+
+        // 刪除按鈕
+        container.querySelector('.delete-btn').onclick = () => container.remove();
+
+        makeDraggable(container);
+        document.getElementById('sticker-layer').appendChild(container);
+    }
+
+    // 滑桿控制大小
+    sizeSlider.oninput = (e) => {
+        if(currentActiveSticker) {
+            currentActiveSticker.style.transform = `scale(${e.target.value})`;
+        }
+    };
+
+    // 點擊空白處取消選取貼紙
+    window.onclick = () => {
+        if(currentActiveSticker) {
+            currentActiveSticker.classList.remove('active');
+            sizeSlider.style.display = 'none';
+            document.getElementById('slider-label').style.display = 'none';
+        }
+    };
+
+    function makeDraggable(elm) {
+        let p1 = 0, p2 = 0, p3 = 0, p4 = 0;
+        const dragStart = (e) => {
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            p3 = clientX; p4 = clientY;
+            document.onmousemove = document.ontouchmove = dragMove;
+            document.onmouseup = document.ontouchend = () => {
+                document.onmousemove = document.ontouchmove = null;
+            };
+        };
+        const dragMove = (e) => {
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            p1 = p3 - clientX; p2 = p4 - clientY;
+            p3 = clientX; p4 = clientY;
+            elm.style.top = (elm.offsetTop - p2) + "px";
+            elm.style.left = (elm.offsetLeft - p1) + "px";
+        };
+        elm.onmousedown = elm.ontouchstart = dragStart;
+    }
+
+    // --- 保留原本功能 (AI, 語音, 藍牙) ---
+    function clearColorLayer() { drawCtx.clearRect(0,0,drawCanvas.width, drawCanvas.height); }
+    async function connectBT(t) { try { await navigator.bluetooth.requestDevice({acceptAllDevices:true}); } catch(e){} }
+    function startVoice() {
+        const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        rec.lang = 'zh-TW'; rec.start();
+        rec.onresult = (e) => { document.getElementById('aiInput').value = e.results[0][0].transcript; generateRealAIArt(); };
+    }
+    async function generateRealAIArt() {
+        const input = document.getElementById('aiInput').value;
+        if(!input || HF_API_KEY.includes("請填寫")) return alert("請輸入內容並填入 API Key");
+        const prompt = `${input}, simple black and white line art, coloring book, thick outlines, white background, cute cartoon`;
+        try {
+            const res = await fetch("https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0", {
+                headers: { Authorization: `Bearer ${HF_API_KEY}` },
+                method: "POST", body: JSON.stringify({ inputs: prompt }),
+            });
+            const blob = await res.blob();
+            const img = new Image();
+            img.onload = () => { bgCtx.clearRect(0,0,bgCanvas.width,bgCanvas.height); bgCtx.drawImage(img, 0, 0, bgCanvas.width, bgCanvas.height); };
+            img.src = URL.createObjectURL(blob);
+        } catch (e) { alert("AI 連線失敗"); }
+    }
+</script>
+</body>
+</html>
